@@ -17,9 +17,4 @@ public static class ParseHelper
 
         return index;
     }
-
-    public static string ParseMessage(this string ircString)
-    {
-        return ircString.Substring(ircString.IndexOfWithSkip(' ', 2) + 2);
-    }
 }

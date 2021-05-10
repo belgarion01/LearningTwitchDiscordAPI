@@ -9,7 +9,7 @@ using UnityEngine;
 // https://github.com/lexonegit/Unity-Twitch-Chat
 public class TwitchIRC : MonoBehaviour
 {
-    [HideInInspector] public class NewChatMessageEvent : UnityEngine.Events.UnityEvent<Chatter> { }
+    [System.Serializable][HideInInspector] public class NewChatMessageEvent : UnityEngine.Events.UnityEvent<Chatter> { }
     [HideInInspector] public class StatusEvent : UnityEngine.Events.UnityEvent<StatusType, string, int> { }
 
     // Events
@@ -303,6 +303,7 @@ public class TwitchIRC : MonoBehaviour
     /// <summary>
     /// Sends a chat message
     /// </summary>
+    
     public void SendChatMessage(string message)
     {
         if (message.Length <= 0) // Message can't be empty
@@ -310,6 +311,9 @@ public class TwitchIRC : MonoBehaviour
 
         outputQueue.Enqueue("PRIVMSG #" + twitchDetails.channel + " :" + message); // Place message in queue
     }
+
+    [ContextMenu("Send Hello")]
+    void SendHello() => SendChatMessage("Hello");
 
     public enum StatusType { Normal, Success, Error };
     public void ConnectionStateAlert(StatusType state, string message, int percentage = 0)

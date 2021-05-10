@@ -6,9 +6,18 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class TwitchIRC : MonoBehaviour
 {
+    public static TwitchIRC Instance
+    {
+        get => instance;
+        private set => instance = value;
+    }
+
+    private static TwitchIRC instance;
+
     private TcpClient socketConnection;
     private NetworkStream stream;
 
@@ -24,22 +33,25 @@ public class TwitchIRC : MonoBehaviour
     [SerializeField] private string user = "belgarion001";
     [SerializeField] private string channel = "belgarion001";
     
-
     private bool connected = false;
+
+    public UnityEvent<Chatter> OnNewMessage;
+
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+        }
+
+        instance = this;
+    }
 
     void Start()
     {
         StartCoroutine(PrepareConnection());
     }
 
-    void Update()
-    {
-        if (Input.anyKeyDown)
-        {
-            SendCommand("Yes man !");
-        }
-    }
-    
     private IEnumerator PrepareConnection()
     {
         if (clientInputThread != null && clientOutputThread != null)
@@ -63,7 +75,7 @@ public class TwitchIRC : MonoBehaviour
 
         stream = socketConnection.GetStream();
 
-        // fix oauth
+        // Fix oauth
         string trimmedOauth = oauth.StartsWith("oauth") ? oauth.Substring(6) : oauth;
         
         WriteLine(stream, "PASS oauth:" + trimmedOauth.ToLower());
@@ -195,7 +207,9 @@ public class TwitchIRC : MonoBehaviour
 
     void HandleChatMessages(string ircString, string tagString)
     {
-        Debug.Log("Someone said: " + ParseHelper.ParseMessage(ircString) + "!");
+        IRCChatMessage IRCChatMessage = TwitchParseHelper.ParseChatMessage(ircString);
+        OnNewMessage?.Invoke(new Chatter(IRCChatMessage, new IRCTags()));
+        //Debug.Log($"{IRCChatMessage.User} said {IRCChatMessage.Message} in channel [{IRCChatMessage.Message}]");
     }
 
     void SendMessage(string message)
